@@ -1,0 +1,68 @@
+---
+import { PATH_GRID, PATH_ROOT, PATH_SETS } from '@/lib/paths';
+import SiteGrid from './SiteGrid.astro';
+import Icons from './Icons.astro';
+
+interface Props {
+  siteTitle: string;
+  pathname: string;
+}
+
+const { siteTitle, pathname } = Astro.props;
+
+const isRoot = pathname === '/' || pathname === '';
+const isGrid = pathname.startsWith(PATH_GRID);
+const isSets = pathname.startsWith(PATH_SETS);
+---
+
+<header transition:persist="site-nav">
+  <SiteGrid>
+    <div class="flex min-h-[4rem] w-full items-center leading-none">
+      <div class="flex flex-grow items-center gap-4">
+        <nav
+          aria-label="Gallery view switcher"
+          class="inline-flex h-[32px] overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-black [&>*:not(:first-child)]:border-l [&>*:not(:first-child)]:border-gray-200 dark:[&>*:not(:first-child)]:border-gray-800"
+        >
+          <a
+            href={PATH_ROOT}
+            aria-label="Full frame view"
+            data-nav-view="full-frame"
+            class:list={[
+              'flex h-full items-center justify-center px-1.5 transition-colors hover:bg-gray-100/70 dark:hover:bg-gray-900/70',
+              isRoot ? 'text-main bg-gray-100 dark:bg-gray-900' : 'text-dim',
+            ]}
+          >
+            <Icons name="full-frame" />
+          </a>
+          <a
+            href={PATH_GRID}
+            aria-label="Grid view"
+            data-nav-view="grid"
+            class:list={[
+              'flex h-full items-center justify-center px-1.5 transition-colors hover:bg-gray-100/70 dark:hover:bg-gray-900/70',
+              isGrid ? 'text-main bg-gray-100 dark:bg-gray-900' : 'text-dim',
+            ]}
+          >
+            <Icons name="grid" />
+          </a>
+          <a
+            href={PATH_SETS}
+            aria-label="Collections and tags"
+            data-nav-view="sets"
+            class:list={[
+              'flex h-full items-center justify-center px-1.5 transition-colors hover:bg-gray-100/70 md:hidden dark:hover:bg-gray-900/70',
+              isSets ? 'text-main bg-gray-100 dark:bg-gray-900' : 'text-dim',
+            ]}
+          >
+            <Icons name="sets" />
+          </a>
+        </nav>
+      </div>
+      <div class="xs:block hidden">
+        <a href={PATH_ROOT} class="font-medium tracking-tight hover:underline">
+          {siteTitle}
+        </a>
+      </div>
+    </div>
+  </SiteGrid>
+</header>

@@ -1,0 +1,40 @@
+---
+import type { Painting } from '@/lib/paintings';
+import { pathForPainting } from '@/lib/paths';
+
+interface Props {
+  painting: Painting;
+  tag?: string;
+  medium?: string;
+  selected?: boolean;
+  aspectRatio?: number;
+}
+
+const { painting, tag, medium, selected = false, aspectRatio = 1 } = Astro.props;
+const href = pathForPainting(painting.id, { tag, medium });
+const blurStyle = painting.blurData
+  ? `background-image: url('${painting.blurData}'); background-size: cover; background-position: center;`
+  : '';
+---
+
+<a
+  href={href}
+  title={painting.title}
+  data-grid-item={painting.id}
+  class:list={[
+    'block overflow-hidden active:brightness-75',
+    selected && 'opacity-50 ring-2 ring-gray-900 dark:ring-gray-100',
+  ]}
+  style={aspectRatio !== 0 ? `aspect-ratio: ${aspectRatio}; ${blurStyle}` : blurStyle}
+  transition:name={selected ? undefined : `painting-img-${painting.id}`}
+>
+  <img
+    src={painting.image}
+    alt={painting.title}
+    width={painting.width}
+    height={painting.height}
+    loading="lazy"
+    decoding="async"
+    class="h-full w-full object-cover transition-transform duration-300 hover:scale-[1.02]"
+  />
+</a>

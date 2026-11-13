@@ -1,0 +1,33 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PaintingDetail from '@/components/PaintingDetail.astro';
+import { getSettings, loadPaintings, type Painting } from '@/lib/paintings';
+
+export function getStaticPaths() {
+  const paintings = loadPaintings();
+  return paintings.map((painting) => ({
+    params: { id: painting.id },
+    props: { painting, paintings },
+  }));
+}
+
+interface Props {
+  painting: Painting;
+  paintings: Painting[];
+}
+
+const { painting, paintings } = Astro.props;
+const settings = getSettings();
+---
+
+<BaseLayout
+  title={painting.title}
+  description={`${painting.title} (${painting.dateFormatted})`}
+  ogImage={`/p/${encodeURIComponent(painting.id)}/og.png`}
+>
+  <PaintingDetail
+    painting={painting}
+    paintings={paintings}
+    gridAspectRatio={settings.gridAspectRatio}
+  />
+</BaseLayout>

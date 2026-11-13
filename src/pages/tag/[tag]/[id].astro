@@ -1,0 +1,55 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PaintingDetail from '@/components/PaintingDetail.astro';
+import {
+  getSettings,
+  getUniqueTags,
+  loadPaintings,
+  paintingQuantityText,
+  type Painting,
+} from '@/lib/paintings';
+import { pathForTagShare } from '@/lib/paths';
+
+export function getStaticPaths() {
+  const paintings = loadPaintings();
+  const tags = getUniqueTags(paintings);
+
+  return tags.flatMap(({ slug, tag }) => {
+    const tagged = paintings.filter((p) => p.tagSlugs.includes(slug));
+    return tagged.map((painting) => ({
+      params: { tag: slug, id: painting.id },
+      props: {
+        tagLabel: tag,
+        tagSlug: slug,
+        painting,
+        paintings: tagged,
+      },
+    }));
+  });
+}
+
+interface Props {
+  tagLabel: string;
+  tagSlug: string;
+  painting: Painting;
+  paintings: Painting[];
+}
+
+const { tagLabel, tagSlug, painting, paintings } = Astro.props;
+const settings = getSettings();
+---
+
+<BaseLayout
+  title={`${painting.title} — ${tagLabel}`}
+  ogImage={`/p/${encodeURIComponent(painting.id)}/og.png`}
+>
+  <PaintingDetail
+    painting={painting}
+    paintings={paintings}
+    tag={tagSlug}
+    headerTitle={`Tag: ${tagLabel}`}
+    headerSubtitle={paintingQuantityText(paintings.length)}
+    shareHeaderPath={pathForTagShare(tagSlug)}
+    gridAspectRatio={settings.gridAspectRatio}
+  />
+</BaseLayout>

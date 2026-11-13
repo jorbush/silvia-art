@@ -1,0 +1,201 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import { getSettings } from '@/lib/paintings';
+import Nav from '@/components/Nav.astro';
+import Footer from '@/components/Footer.astro';
+import '@/styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+  canonicalPath?: string;
+}
+
+const settings = getSettings();
+const {
+  title = settings.siteTitle,
+  description = settings.siteDescription,
+  ogImage = '/og-home.png',
+  canonicalPath = Astro.url.pathname,
+} = Astro.props;
+
+const pageTitle = title === settings.siteTitle ? title : `${title} — ${settings.siteTitle}`;
+const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url.origin).toString();
+const ogImageUrl = new URL(ogImage, Astro.site ?? Astro.url.origin).toString();
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImageUrl} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+
+    <link rel="icon" href="/favicon.ico" />
+    <link
+      rel="icon"
+      href="/favicons/light.png"
+      media="(prefers-color-scheme: light)"
+      type="image/png"
+      sizes="32x32"
+    />
+    <link
+      rel="icon"
+      href="/favicons/dark.png"
+      media="(prefers-color-scheme: dark)"
+      type="image/png"
+      sizes="32x32"
+    />
+    <link rel="apple-touch-icon" href="/favicons/apple-touch-icon.png" sizes="180x180" />
+
+    <ClientRouter />
+
+    <script is:inline>
+      (function () {
+        const STORAGE_KEY = 'silvia-art-theme';
+        function getStoredTheme() {
+          try {
+            return localStorage.getItem(STORAGE_KEY) || 'system';
+          } catch {
+            return 'system';
+          }
+        }
+        function applyTheme(theme) {
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const isDark = theme === 'dark' || (theme === 'system' && prefersDark);
+          document.documentElement.classList.toggle('dark', isDark);
+          document.documentElement.dataset.theme = theme;
+          document.querySelectorAll('[data-theme-value]').forEach((btn) => {
+            const active = btn.getAttribute('data-theme-value') === theme;
+            btn.classList.toggle('bg-gray-100', active);
+            btn.classList.toggle('dark:bg-gray-900', active);
+            btn.classList.toggle('text-main', active);
+            btn.classList.toggle('text-dim', !active);
+          });
+        }
+        applyTheme(getStoredTheme());
+        document.addEventListener('astro:after-swap', () => {
+          applyTheme(getStoredTheme());
+        });
+      })();
+    </script>
+  </head>
+  <body>
+    <main class="px-3 pb-3 lg:px-6 lg:pb-6">
+      <Nav siteTitle={settings.siteTitle} pathname={Astro.url.pathname} />
+      <div class="mx-auto mt-2 min-h-[38rem] space-y-12">
+        <slot />
+      </div>
+      <Footer contactEmail={settings.contactEmail} />
+    </main>
+
+    <script>
+      import { navigate } from 'astro:transitions/client';
+      import { getEscapePath } from '@/lib/paths';
+
+      const STORAGE_KEY = 'silvia-art-theme';
+
+      function syncNavState() {
+        const path = window.location.pathname;
+        document.querySelectorAll('[data-nav-view]').forEach((el) => {
+          const view = el.getAttribute('data-nav-view');
+          const active =
+            (view === 'full-frame' && path === '/') ||
+            (view === 'grid' && path.startsWith('/grid')) ||
+            (view === 'sets' && path.startsWith('/sets'));
+          el.classList.toggle('bg-gray-100', active);
+          el.classList.toggle('dark:bg-gray-900', active);
+          el.classList.toggle('text-main', active);
+          el.classList.toggle('text-dim', !active);
+        });
+      }
+
+      function applyAndStoreTheme(theme: string) {
+        try {
+          localStorage.setItem(STORAGE_KEY, theme);
+        } catch {
+          // ignore storage errors
+        }
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const isDark = theme === 'dark' || (theme === 'system' && prefersDark);
+        document.documentElement.classList.toggle('dark', isDark);
+        document.documentElement.dataset.theme = theme;
+        document.querySelectorAll('[data-theme-value]').forEach((btn) => {
+          const active = btn.getAttribute('data-theme-value') === theme;
+          btn.classList.toggle('bg-gray-100', active);
+          btn.classList.toggle('dark:bg-gray-900', active);
+          btn.classList.toggle('text-main', active);
+          btn.classList.toggle('text-dim', !active);
+        });
+      }
+
+      function initPageInteractions() {
+        syncNavState();
+        const storedTheme = (() => {
+          try {
+            return localStorage.getItem(STORAGE_KEY) || 'system';
+          } catch {
+            return 'system';
+          }
+        })();
+        applyAndStoreTheme(storedTheme);
+
+        document.querySelectorAll('[data-theme-value]').forEach((btn) => {
+          if (btn.getAttribute('data-bound') === 'true') return;
+          btn.setAttribute('data-bound', 'true');
+          btn.addEventListener('click', () => {
+            const theme = btn.getAttribute('data-theme-value') || 'system';
+            applyAndStoreTheme(theme);
+          });
+        });
+      }
+
+      let keyHandlerBound = false;
+      if (!keyHandlerBound) {
+        keyHandlerBound = true;
+        window.addEventListener('keyup', (e) => {
+          const tag = (e.target as HTMLElement | null)?.tagName;
+          if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+          const key = e.key.toUpperCase();
+          if (key === 'ESCAPE') {
+            const target = getEscapePath(window.location.pathname);
+            if (target) {
+              navigate(target);
+            }
+            return;
+          }
+          if (key === 'ARROWLEFT' || key === 'J') {
+            const prevLink = document.querySelector<HTMLAnchorElement>('[data-painting-prev]');
+            if (prevLink?.href) {
+              navigate(prevLink.href);
+            }
+            return;
+          }
+          if (key === 'ARROWRIGHT' || key === 'L') {
+            const nextLink = document.querySelector<HTMLAnchorElement>('[data-painting-next]');
+            if (nextLink?.href) {
+              navigate(nextLink.href);
+            }
+          }
+        });
+      }
+
+      document.addEventListener('astro:page-load', initPageInteractions);
+    </script>
+  </body>
+</html>

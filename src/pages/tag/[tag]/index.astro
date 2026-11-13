@@ -1,0 +1,67 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import SiteGrid from '@/components/SiteGrid.astro';
+import PaintingGrid from '@/components/PaintingGrid.astro';
+import {
+  getDateRangeForPaintings,
+  getSettings,
+  getUniqueTags,
+  loadPaintings,
+  paintingQuantityText,
+  type Painting,
+} from '@/lib/paintings';
+import { pathForTagShare } from '@/lib/paths';
+import Icons from '@/components/Icons.astro';
+
+export function getStaticPaths() {
+  const paintings = loadPaintings();
+  const tags = getUniqueTags(paintings);
+
+  return tags.map(({ slug, tag }) => ({
+    params: { tag: slug },
+    props: {
+      tagLabel: tag,
+      tagSlug: slug,
+      paintings: paintings.filter((p) => p.tagSlugs.includes(slug)),
+    },
+  }));
+}
+
+interface Props {
+  tagLabel: string;
+  tagSlug: string;
+  paintings: Painting[];
+}
+
+const { tagLabel, tagSlug, paintings } = Astro.props;
+const settings = getSettings();
+const { description: dateRangeDesc } = getDateRangeForPaintings(paintings);
+---
+
+<BaseLayout
+  title={`Tagged: ${tagLabel}`}
+  description={`${paintingQuantityText(paintings.length, false)} tagged ${tagLabel}`}
+  ogImage={`/tag/${encodeURIComponent(tagSlug)}/og.png`}
+>
+  <SiteGrid>
+    <div class="mt-4 space-y-8">
+      <div
+        class="flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-200 pb-3 dark:border-gray-800"
+      >
+        <div class="flex items-center gap-2">
+          <Icons name="tag" class="text-icon h-3.5 w-3.5" />
+          <span class="font-bold uppercase">{tagLabel}</span>
+          <span class="text-medium text-sm uppercase">
+            {paintingQuantityText(paintings.length)}
+            {dateRangeDesc}
+          </span>
+        </div>
+        <a href={pathForTagShare(tagSlug)} class="text-dim hover:text-main text-xs uppercase">
+          Share tag
+        </a>
+      </div>
+
+      <PaintingGrid paintings={paintings} tag={tagSlug} aspectRatio={settings.gridAspectRatio} />
+    </div>
+  </SiteGrid>
+</BaseLayout>

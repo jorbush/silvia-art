@@ -1,0 +1,103 @@
+---
+import { getNextPainting, getPreviousPainting, type Painting } from '@/lib/paintings';
+import { pathForPainting } from '@/lib/paths';
+import PaintingLarge from './PaintingLarge.astro';
+import PaintingGrid from './PaintingGrid.astro';
+import SiteGrid from './SiteGrid.astro';
+
+interface Props {
+  painting: Painting;
+  paintings: Painting[];
+  tag?: string;
+  medium?: string;
+  headerTitle?: string;
+  headerSubtitle?: string;
+  shareHeaderPath?: string;
+  gridAspectRatio?: number;
+}
+
+const {
+  painting,
+  paintings,
+  tag,
+  medium,
+  headerTitle,
+  headerSubtitle,
+  shareHeaderPath,
+  gridAspectRatio = 1,
+} = Astro.props;
+
+const prevPainting = getPreviousPainting(painting, paintings);
+const nextPainting = getNextPainting(painting, paintings);
+
+const currentIndex = paintings.findIndex((p) => p.id === painting.id);
+const start = Math.max(0, currentIndex - 6);
+const nearbyPaintings = paintings.slice(start, start + 13);
+---
+
+<div class="space-y-8">
+  {
+    headerTitle && (
+      <SiteGrid>
+        <div class="mt-4 flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-200 pb-3 dark:border-gray-800">
+          <div class="space-x-2">
+            <span class="font-bold uppercase">{headerTitle}</span>
+            {headerSubtitle && <span class="text-medium text-sm uppercase">{headerSubtitle}</span>}
+          </div>
+          {shareHeaderPath && (
+            <a href={shareHeaderPath} class="text-dim hover:text-main text-xs uppercase">
+              Share set
+            </a>
+          )}
+        </div>
+      </SiteGrid>
+    )
+  }
+
+  <PaintingLarge
+    painting={painting}
+    primaryTag={tag}
+    primaryMedium={medium}
+    priority
+    showMedium={!medium}
+  />
+
+  <SiteGrid sideFirstOnMobile>
+    <PaintingGrid
+      paintings={nearbyPaintings}
+      selectedPainting={painting}
+      tag={tag}
+      medium={medium}
+      aspectRatio={gridAspectRatio}
+    />
+
+    <div slot="side" class="grid grid-cols-2 gap-2 md:flex md:gap-4">
+      {
+        prevPainting ? (
+          <a
+            href={pathForPainting(prevPainting.id, { tag, medium })}
+            data-painting-prev
+            class="button justify-center uppercase"
+          >
+            PREV
+          </a>
+        ) : (
+          <span class="button cursor-not-allowed justify-center uppercase opacity-40">PREV</span>
+        )
+      }
+      {
+        nextPainting ? (
+          <a
+            href={pathForPainting(nextPainting.id, { tag, medium })}
+            data-painting-next
+            class="button justify-center uppercase"
+          >
+            NEXT
+          </a>
+        ) : (
+          <span class="button cursor-not-allowed justify-center uppercase opacity-40">NEXT</span>
+        )
+      }
+    </div>
+  </SiteGrid>
+</div>

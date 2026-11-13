@@ -1,0 +1,106 @@
+---
+import type { Painting } from '@/lib/paintings';
+import { pathForMedium, pathForPainting, pathForPaintingShare, pathForTag } from '@/lib/paths';
+import SiteGrid from './SiteGrid.astro';
+import Icons from './Icons.astro';
+
+interface Props {
+  painting: Painting;
+  primaryTag?: string;
+  primaryMedium?: string;
+  priority?: boolean;
+  showMedium?: boolean;
+}
+
+const { painting, primaryTag, primaryMedium, priority = false, showMedium = true } = Astro.props;
+
+const tagsToShow = painting.tags.filter((t) => t !== primaryTag);
+const detailHref = pathForPainting(painting.id, { tag: primaryTag, medium: primaryMedium });
+const shareHref = pathForPaintingShare(painting.id, { tag: primaryTag, medium: primaryMedium });
+const blurStyle = painting.blurData
+  ? `aspect-ratio: ${painting.aspectRatio}; background-image: url('${painting.blurData}'); background-size: cover; background-position: center;`
+  : `aspect-ratio: ${painting.aspectRatio};`;
+---
+
+<article data-painting-id={painting.id}>
+  <SiteGrid>
+    <a
+      href={detailHref}
+      class="block overflow-hidden active:brightness-75"
+      style={blurStyle}
+      transition:name={`painting-img-${painting.id}`}
+    >
+      <img
+        src={painting.image}
+        alt={painting.title}
+        width={painting.width}
+        height={painting.height}
+        loading={priority ? 'eager' : 'lazy'}
+        decoding={priority ? 'sync' : 'async'}
+        class="h-auto w-full object-cover"
+      />
+    </a>
+
+    <div
+      slot="side"
+      class="mb-4 grid -translate-y-1 grid-cols-2 gap-x-0.5 gap-y-4 leading-snug sm:gap-x-1 md:sticky md:top-4 md:grid-cols-1 md:self-start"
+    >
+      <div class="flex flex-col gap-y-4 pr-2 sm:flex-row md:flex-col [&>*]:sm:flex-grow">
+        <div class="-space-y-0.5">
+          <a href={pathForPainting(painting.id)} class="font-bold uppercase hover:underline">
+            {painting.title}
+          </a>
+          {
+            tagsToShow.length > 0 && (
+              <div class="flex flex-col pt-0.5">
+                {tagsToShow.map((tag) => (
+                  <a
+                    href={pathForTag(tag)}
+                    class="text-medium inline-flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-100"
+                  >
+                    <Icons name="tag" class="text-icon shrink-0" />
+                    <span class="uppercase">{tag}</span>
+                  </a>
+                ))}
+              </div>
+            )
+          }
+        </div>
+
+        {
+          (showMedium && painting.medium) || painting.dimensions ? (
+            <div class="text-medium space-y-0.5 text-sm">
+              {showMedium && painting.medium && (
+                <div>
+                  <a
+                    href={pathForMedium(painting.medium)}
+                    class="inline-flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-gray-100"
+                  >
+                    <Icons name="medium" class="text-icon shrink-0" />
+                    <span>{painting.medium}</span>
+                  </a>
+                </div>
+              )}
+              {painting.dimensions && <div class="text-dim">{painting.dimensions}</div>}
+            </div>
+          ) : null
+        }
+      </div>
+
+      <div class="flex flex-col gap-y-4 sm:flex-row md:flex-col [&>*]:sm:flex-grow">
+        {painting.body && <p class="text-medium text-sm">{painting.body}</p>}
+        <div class="flex flex-col gap-y-2 sm:flex-row sm:items-center md:flex-col md:items-start">
+          <div class="text-medium grow uppercase">{painting.dateFormatted}</div>
+          <a
+            href={shareHref}
+            aria-label={`Share ${painting.title}`}
+            class="button subtle text-dim hover:text-main inline-flex min-h-0 items-center gap-1.5 px-2.5 py-1 text-xs uppercase"
+          >
+            <Icons name="share" class="h-3.5 w-3.5" />
+            <span>Share</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </SiteGrid>
+</article>

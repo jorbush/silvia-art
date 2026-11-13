@@ -1,0 +1,35 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ShareCard from '@/components/ShareCard.astro';
+import { getUniqueTags, loadPaintings } from '@/lib/paintings';
+import { pathForTag } from '@/lib/paths';
+import { SITE_URL } from '@/lib/settings';
+
+export function getStaticPaths() {
+  const paintings = loadPaintings();
+  return getUniqueTags(paintings).map(({ slug, tag }) => ({
+    params: { tag: slug },
+    props: { tagLabel: tag, tagSlug: slug },
+  }));
+}
+
+interface Props {
+  tagLabel: string;
+  tagSlug: string;
+}
+
+const { tagLabel, tagSlug } = Astro.props;
+const closePath = pathForTag(tagSlug);
+const shareUrl = new URL(closePath, SITE_URL).toString();
+const ogImagePath = `/tag/${encodeURIComponent(tagSlug)}/og.png`;
+---
+
+<BaseLayout title={`Share Tag: ${tagLabel}`} ogImage={ogImagePath}>
+  <ShareCard
+    title={`Share Tag: ${tagLabel}`}
+    shareUrl={shareUrl}
+    closePath={closePath}
+    ogImagePath={ogImagePath}
+    previewTitle={tagLabel}
+  />
+</BaseLayout>

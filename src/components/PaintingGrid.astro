@@ -1,0 +1,36 @@
+---
+import type { Painting } from '@/lib/paintings';
+import PaintingSmall from './PaintingSmall.astro';
+
+interface Props {
+  paintings: Painting[];
+  selectedPainting?: Painting;
+  tag?: string;
+  medium?: string;
+  aspectRatio?: number;
+  small?: boolean;
+}
+
+const { paintings, selectedPainting, tag, medium, aspectRatio = 1, small = false } = Astro.props;
+
+const highDensity = aspectRatio <= 1;
+const gridColsClass = small
+  ? 'grid-cols-3 xs:grid-cols-6'
+  : highDensity
+    ? 'grid-cols-2 xs:grid-cols-4 lg:grid-cols-5'
+    : 'grid-cols-2 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-4';
+---
+
+<div class:list={['grid items-center gap-0.5 sm:gap-1', gridColsClass]}>
+  {
+    paintings.map((painting) => (
+      <PaintingSmall
+        painting={painting}
+        tag={tag}
+        medium={medium}
+        selected={painting.id === selectedPainting?.id}
+        aspectRatio={aspectRatio}
+      />
+    ))
+  }
+</div>

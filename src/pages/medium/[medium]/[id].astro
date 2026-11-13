@@ -1,0 +1,55 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PaintingDetail from '@/components/PaintingDetail.astro';
+import {
+  getSettings,
+  getUniqueMediums,
+  loadPaintings,
+  paintingQuantityText,
+  type Painting,
+} from '@/lib/paintings';
+import { pathForMediumShare } from '@/lib/paths';
+
+export function getStaticPaths() {
+  const paintings = loadPaintings();
+  const mediums = getUniqueMediums(paintings);
+
+  return mediums.flatMap(({ slug, medium }) => {
+    const filtered = paintings.filter((p) => p.mediumSlug === slug);
+    return filtered.map((painting) => ({
+      params: { medium: slug, id: painting.id },
+      props: {
+        mediumLabel: medium,
+        mediumSlug: slug,
+        painting,
+        paintings: filtered,
+      },
+    }));
+  });
+}
+
+interface Props {
+  mediumLabel: string;
+  mediumSlug: string;
+  painting: Painting;
+  paintings: Painting[];
+}
+
+const { mediumLabel, mediumSlug, painting, paintings } = Astro.props;
+const settings = getSettings();
+---
+
+<BaseLayout
+  title={`${painting.title} — ${mediumLabel}`}
+  ogImage={`/p/${encodeURIComponent(painting.id)}/og.png`}
+>
+  <PaintingDetail
+    painting={painting}
+    paintings={paintings}
+    medium={mediumSlug}
+    headerTitle={`Medium: ${mediumLabel}`}
+    headerSubtitle={paintingQuantityText(paintings.length)}
+    shareHeaderPath={pathForMediumShare(mediumSlug)}
+    gridAspectRatio={settings.gridAspectRatio}
+  />
+</BaseLayout>

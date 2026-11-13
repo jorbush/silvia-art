@@ -1,0 +1,35 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ShareCard from '@/components/ShareCard.astro';
+import { getUniqueMediums, loadPaintings } from '@/lib/paintings';
+import { pathForMedium } from '@/lib/paths';
+import { SITE_URL } from '@/lib/settings';
+
+export function getStaticPaths() {
+  const paintings = loadPaintings();
+  return getUniqueMediums(paintings).map(({ slug, medium }) => ({
+    params: { medium: slug },
+    props: { mediumLabel: medium, mediumSlug: slug },
+  }));
+}
+
+interface Props {
+  mediumLabel: string;
+  mediumSlug: string;
+}
+
+const { mediumLabel, mediumSlug } = Astro.props;
+const closePath = pathForMedium(mediumSlug);
+const shareUrl = new URL(closePath, SITE_URL).toString();
+const ogImagePath = `/medium/${encodeURIComponent(mediumSlug)}/og.png`;
+---
+
+<BaseLayout title={`Share Medium: ${mediumLabel}`} ogImage={ogImagePath}>
+  <ShareCard
+    title={`Share Medium: ${mediumLabel}`}
+    shareUrl={shareUrl}
+    closePath={closePath}
+    ogImagePath={ogImagePath}
+    previewTitle={mediumLabel}
+  />
+</BaseLayout>

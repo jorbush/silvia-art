@@ -1,0 +1,87 @@
+---
+import { shortenUrl } from '@/lib/url';
+import SiteGrid from './SiteGrid.astro';
+import Icons from './Icons.astro';
+
+interface Props {
+  title: string;
+  shareUrl: string;
+  closePath: string;
+  ogImagePath: string;
+  previewTitle: string;
+}
+
+const { title, shareUrl, closePath, ogImagePath, previewTitle } = Astro.props;
+---
+
+<SiteGrid>
+  <div
+    class="mx-auto max-w-[540px] rounded-xl border border-gray-200 bg-white p-4 shadow-sm md:p-6 dark:border-gray-800 dark:bg-black"
+  >
+    <div class="space-y-4">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 text-xl font-medium md:text-2xl">
+          <Icons name="share" class="h-5 w-5" />
+          <span>{title}</span>
+        </div>
+        <a href={closePath} class="button subtle px-3 py-1 text-xs uppercase"> Close </a>
+      </div>
+
+      <div class="overflow-hidden rounded-md border border-gray-200 dark:border-gray-800">
+        <img
+          src={ogImagePath}
+          alt={previewTitle}
+          width="1200"
+          height="630"
+          class="h-auto w-full object-cover"
+        />
+      </div>
+
+      <div
+        class="flex w-full items-center overflow-hidden rounded-md border border-gray-200 dark:border-gray-800"
+      >
+        <div class="w-full truncate p-2.5 text-sm" data-share-url={shareUrl}>
+          {shortenUrl(shareUrl)}
+        </div>
+        <button
+          type="button"
+          data-copy-share={shareUrl}
+          aria-label="Copy share link"
+          class="rounded-none border-0 border-l border-gray-200 bg-gray-100 p-3 shadow-none hover:bg-gray-200 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800"
+        >
+          <Icons name="copy" />
+        </button>
+      </div>
+
+      <p
+        data-copy-feedback
+        class="hidden text-xs text-gray-600 uppercase dark:text-gray-300"
+        role="status"
+      >
+        Link copied to clipboard
+      </p>
+    </div>
+  </div>
+</SiteGrid>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const btn = document.querySelector<HTMLButtonElement>('[data-copy-share]');
+    const feedback = document.querySelector<HTMLElement>('[data-copy-feedback]');
+    if (!btn || btn.dataset.bound === 'true') return;
+    btn.dataset.bound = 'true';
+
+    btn.addEventListener('click', async () => {
+      const url = btn.getAttribute('data-copy-share');
+      if (!url) return;
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch {
+        // fallback ignored in headless contexts without clipboard permission
+      }
+      if (feedback) {
+        feedback.classList.remove('hidden');
+      }
+    });
+  });
+</script>

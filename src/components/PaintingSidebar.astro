@@ -1,0 +1,83 @@
+---
+import {
+  getDateRangeForPaintings,
+  paintingQuantityText,
+  type MediumSummary,
+  type Painting,
+  type TagSummary,
+} from '@/lib/paintings';
+import { pathForMedium, pathForTag } from '@/lib/paths';
+import HeaderList from './HeaderList.astro';
+import Icons from './Icons.astro';
+
+interface Props {
+  paintings: Painting[];
+  tags: TagSummary[];
+  mediums: MediumSummary[];
+}
+
+const { paintings, tags, mediums } = Astro.props;
+const { start, end } = getDateRangeForPaintings(paintings);
+---
+
+<div class="space-y-4">
+  {
+    tags.length > 0 && (
+      <HeaderList title="Tags">
+        <Icons slot="icon" name="tag" class="text-icon inline-block" />
+        <ul class="space-y-0.5">
+          {tags.map(({ tag, count }) => (
+            <li>
+              <a
+                href={pathForTag(tag)}
+                class="group text-medium hover:text-main inline-flex items-center gap-1.5"
+              >
+                <span class="rounded bg-gray-100 px-1.5 py-0.5 text-xs uppercase dark:bg-gray-900">
+                  {tag}
+                </span>
+                <span class="text-dim opacity-0 transition-opacity group-hover:opacity-100">
+                  {count}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </HeaderList>
+    )
+  }
+
+  {
+    mediums.length > 0 && (
+      <HeaderList title="Mediums">
+        <Icons slot="icon" name="medium" class="text-icon inline-block" />
+        <ul class="space-y-0.5">
+          {mediums.map(({ medium, count }) => (
+            <li>
+              <a
+                href={pathForMedium(medium)}
+                class="group text-medium hover:text-main inline-flex items-center gap-1.5"
+              >
+                <span class="uppercase">{medium}</span>
+                <span class="text-dim opacity-0 transition-opacity group-hover:opacity-100">
+                  {count}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </HeaderList>
+    )
+  }
+
+  {
+    paintings.length > 0 && start ? (
+      <HeaderList title={paintingQuantityText(paintings.length, false)}>
+        <div class="text-medium uppercase">{start === end ? start : `${end} – ${start}`}</div>
+      </HeaderList>
+    ) : (
+      <HeaderList>
+        <div class="text-medium uppercase">{paintingQuantityText(paintings.length, false)}</div>
+      </HeaderList>
+    )
+  }
+</div>

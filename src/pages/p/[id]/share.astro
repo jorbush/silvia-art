@@ -1,0 +1,34 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ShareCard from '@/components/ShareCard.astro';
+import { loadPaintings, type Painting } from '@/lib/paintings';
+import { pathForPainting } from '@/lib/paths';
+import { SITE_URL } from '@/lib/settings';
+
+export function getStaticPaths() {
+  const paintings = loadPaintings();
+  return paintings.map((painting) => ({
+    params: { id: painting.id },
+    props: { painting },
+  }));
+}
+
+interface Props {
+  painting: Painting;
+}
+
+const { painting } = Astro.props;
+const closePath = pathForPainting(painting.id);
+const shareUrl = new URL(closePath, SITE_URL).toString();
+const ogImagePath = `/p/${encodeURIComponent(painting.id)}/og.png`;
+---
+
+<BaseLayout title={`Share ${painting.title}`} ogImage={ogImagePath}>
+  <ShareCard
+    title="Share Painting"
+    shareUrl={shareUrl}
+    closePath={closePath}
+    ogImagePath={ogImagePath}
+    previewTitle={painting.title}
+  />
+</BaseLayout>

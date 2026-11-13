@@ -1,0 +1,51 @@
+{
+  "name": "silvia-art",
+  "version": "2.0.0",
+  "description": "Silvia's paintings gallery rebuilt with Astro, Tailwind CSS, TypeScript, and View Transitions",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.1.1",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp"
+    ]
+  },
+  "scripts": {
+    "predev": "tsx scripts/sync-content.ts",
+    "dev": "astro dev",
+    "prebuild": "tsx scripts/sync-content.ts",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "sync:content": "tsx scripts/sync-content.ts",
+    "format": "prettier --write .",
+    "check-format": "prettier --check .",
+    "lint": "oxlint --deny-warnings",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.4.0",
+    "@resvg/resvg-js": "^2.6.2",
+    "@tailwindcss/vite": "^4.1.4",
+    "astro": "^5.7.10",
+    "gray-matter": "^4.0.3",
+    "satori": "^0.12.2",
+    "sharp": "^0.34.1",
+    "tailwindcss": "^4.1.4",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@playwright/test": "^1.52.0",
+    "@types/node": "^22.14.1",
+    "jsdom": "^26.1.0",
+    "oxlint": "^0.16.5",
+    "prettier": "^3.8.3",
+    "prettier-plugin-astro": "^0.14.1",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.2",
+    "vitest": "^3.1.2"
+  }
+}

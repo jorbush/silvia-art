@@ -1,0 +1,67 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PaintingLarge from '@/components/PaintingLarge.astro';
+import SiteGrid from '@/components/SiteGrid.astro';
+import { getSettings, loadPaintings } from '@/lib/paintings';
+
+const PAGE_SIZE = 12;
+const paintings = loadPaintings();
+const settings = getSettings();
+const initialPaintings = paintings.slice(0, PAGE_SIZE);
+const remainingPaintings = paintings.slice(PAGE_SIZE);
+---
+
+<BaseLayout title={settings.siteTitle} description={settings.siteDescription}>
+  {
+    paintings.length > 0 ? (
+      <div class="space-y-6">
+        <div class="space-y-4">
+          {initialPaintings.map((painting, index) => (
+            <div class="animate-fade-up" style={`animation-delay: ${Math.min(index, 6) * 60}ms;`}>
+              <PaintingLarge painting={painting} priority={index <= 1} />
+            </div>
+          ))}
+        </div>
+
+        {remainingPaintings.length > 0 && (
+          <div id="more-paintings-container" class="space-y-4">
+            <div id="more-paintings-list" class="hidden space-y-4">
+              {remainingPaintings.map((painting) => (
+                <PaintingLarge painting={painting} />
+              ))}
+            </div>
+            <SiteGrid>
+              <button
+                type="button"
+                id="show-more-paintings"
+                class="button subtle w-full justify-center uppercase"
+              >
+                Show all {paintings.length} paintings
+              </button>
+            </SiteGrid>
+          </div>
+        )}
+      </div>
+    ) : (
+      <SiteGrid>
+        <div class="text-medium rounded-lg border border-gray-200 p-8 text-center dark:border-gray-800">
+          No paintings published yet.
+        </div>
+      </SiteGrid>
+    )
+  }
+</BaseLayout>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const btn = document.getElementById('show-more-paintings');
+    const list = document.getElementById('more-paintings-list');
+    if (!btn || !list || btn.dataset.bound === 'true') return;
+    btn.dataset.bound = 'true';
+
+    btn.addEventListener('click', () => {
+      list.classList.remove('hidden');
+      btn.remove();
+    });
+  });
+</script>
